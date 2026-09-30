@@ -1,6 +1,6 @@
 const MUTE_KEY = "kemeow.bgm.mute.v1";
 const BGM_URL = "audio/bgm.mp3";
-const VOLUME = 0.15;
+const VOLUME = 0.32;
 
 export interface BgmOptions {
   baseUrl: string;
