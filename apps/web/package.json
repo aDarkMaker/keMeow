@@ -1,0 +1,22 @@
+{
+  "name": "@kemeow/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@kemeow/game-core": "workspace:*",
+    "@kemeow/ui": "workspace:*",
+    "astro": "7.3.5",
+    "drawably": "0.4.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "5.9.3"
+  }
+}

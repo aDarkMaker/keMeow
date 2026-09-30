@@ -1,0 +1,51 @@
+---
+import { ClientRouter } from "astro:transitions";
+
+import TopBar from "@/components/TopBar.astro";
+import { withBase } from "@/lib/paths";
+import "drawably/style.css";
+import "drawably/font.css";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "A hand-drawn merge game." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <link rel="icon" href={withBase("favicon.ico")} sizes="any" />
+    <link rel="icon" type="image/png" href={withBase("favicon-32.png")} sizes="32x32" />
+    <link rel="apple-touch-icon" href={withBase("apple-touch-icon.png")} />
+    <title>{title}</title>
+    <ClientRouter />
+  </head>
+  <body>
+    <TopBar />
+    <main class="dashboard" data-dashboard>
+      <slot />
+    </main>
+    <script>
+      import { attachTree, destroyTree } from "@kemeow/ui";
+
+      document.addEventListener("astro:page-load", () => {
+        const dashboard = document.querySelector("[data-dashboard]");
+        if (!dashboard) return;
+        destroyTree(dashboard);
+        attachTree(dashboard);
+      });
+
+      document.addEventListener("astro:before-swap", () => {
+        const dashboard = document.querySelector("[data-dashboard]");
+        if (dashboard) destroyTree(dashboard);
+      });
+    </script>
+  </body>
+</html>

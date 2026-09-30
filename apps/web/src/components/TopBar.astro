@@ -1,0 +1,260 @@
+---
+import { NAV } from "@/lib/nav";
+import { withBase } from "@/lib/paths";
+
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+function isCurrent(href: string): boolean {
+  const target = href.replace(/\/$/, "") || "/";
+  return path === target;
+}
+---
+
+<header class="topbar" data-topbar transition:persist="topbar">
+  <h1 class="topbar-title">keMeow</h1>
+  <div class="topbar-tools">
+    <nav class="topbar-nav" aria-label="Main" data-topbar-nav>
+      {
+        NAV.map((item) => (
+          <a
+            class="topbar-link"
+            href={item.href}
+            data-nav-href={item.href}
+            aria-current={isCurrent(item.href) ? "page" : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+      <span class="topbar-indicator" data-nav-indicator aria-hidden="true"></span>
+    </nav>
+    <button
+      class="icon-btn bgm-toggle"
+      type="button"
+      data-bgm-toggle
+      data-drawably="button"
+      aria-pressed="true"
+      aria-label="Toggle background music"
+      title="Background music"
+    >
+      <img class="icon icon-on" src={withBase("icons/music.svg")} alt="" width="18" height="18" />
+      <img
+        class="icon icon-off"
+        src={withBase("icons/music-off.svg")}
+        alt=""
+        width="18"
+        height="18"
+        hidden
+      />
+    </button>
+  </div>
+</header>
+
+<script>
+  import { PageBgm } from "@/lib/bgm";
+  import { attachTree } from "@kemeow/ui";
+
+  let bgm: PageBgm | null = null;
+  let bound = false;
+
+  const paintBgm = (): void => {
+    const btn = document.querySelector<HTMLButtonElement>("[data-bgm-toggle]");
+    if (!btn || !bgm) return;
+    const on = !bgm.isMuted;
+    btn.setAttribute("aria-pressed", String(on));
+    const onIcon = btn.querySelector<HTMLImageElement>(".icon-on");
+    const offIcon = btn.querySelector<HTMLImageElement>(".icon-off");
+    if (onIcon) onIcon.hidden = !on;
+    if (offIcon) offIcon.hidden = on;
+  };
+
+  const placeIndicator = (): void => {
+    const nav = document.querySelector<HTMLElement>("[data-topbar-nav]");
+    const indicator = document.querySelector<HTMLElement>("[data-nav-indicator]");
+    if (!nav || !indicator) return;
+
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>(".topbar-link")];
+    let active: HTMLAnchorElement | null = null;
+    for (const link of links) {
+      const href = (link.dataset.navHref ?? "").replace(/\/$/, "") || "/";
+      const current = path === href;
+      if (current) {
+        link.setAttribute("aria-current", "page");
+        active = link;
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+
+    if (!active) {
+      indicator.style.opacity = "0";
+      return;
+    }
+
+    const navBox = nav.getBoundingClientRect();
+    const linkBox = active.getBoundingClientRect();
+    indicator.style.opacity = "1";
+    indicator.style.width = `${linkBox.width}px`;
+    indicator.style.transform = `translateX(${linkBox.left - navBox.left}px)`;
+  };
+
+  const boot = (): void => {
+    const topbar = document.querySelector("[data-topbar]");
+    if (topbar) attachTree(topbar);
+
+    if (!bgm) {
+      bgm = new PageBgm({ baseUrl: import.meta.env.BASE_URL });
+      bgm.start();
+      document.addEventListener("pointerdown", () => bgm?.unlock(), {
+        capture: true,
+        passive: true,
+      });
+      document.addEventListener("keydown", () => bgm?.unlock(), { capture: true });
+    }
+
+    const btn = document.querySelector<HTMLButtonElement>("[data-bgm-toggle]");
+    if (btn && !bound) {
+      bound = true;
+      btn.addEventListener("click", () => {
+        bgm?.toggle();
+        paintBgm();
+      });
+    }
+
+    paintBgm();
+    placeIndicator();
+    requestAnimationFrame(placeIndicator);
+  };
+
+  document.addEventListener("astro:page-load", boot);
+  window.addEventListener("resize", placeIndicator);
+</script>
+
+<style>
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: var(--shell);
+    height: 2.75rem;
+    flex: none;
+    box-sizing: border-box;
+    view-transition-name: none;
+  }
+
+  .topbar-title {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--accent);
+  }
+
+  .topbar-tools {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    flex: none;
+  }
+
+  .topbar-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    font-size: 0.95rem;
+  }
+
+  .topbar-link {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.25rem 0.4rem;
+    line-height: 1;
+    color: var(--accent);
+    text-decoration: none !important;
+    transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .topbar-link:hover,
+  .topbar-link[aria-current="page"] {
+    color: var(--ink);
+    text-decoration: none !important;
+  }
+
+  .topbar-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
+
+  .topbar-indicator {
+    position: absolute;
+    left: 0;
+    bottom: 0.12rem;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 160ms ease;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    color: var(--accent);
+  }
+
+  .icon-btn .icon {
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .icon-btn .icon[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 48rem) {
+    .topbar {
+      width: 100%;
+      height: 2.35rem;
+      gap: 0.5rem;
+    }
+
+    .topbar-title {
+      font-size: 1.15rem;
+    }
+
+    .topbar-tools {
+      gap: 0.55rem;
+    }
+
+    .topbar-nav {
+      gap: 0.7rem;
+      font-size: 0.85rem;
+    }
+
+    .topbar-link {
+      min-height: 1.75rem;
+      padding: 0.15rem 0.25rem;
+    }
+
+    .icon-btn {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+</style>

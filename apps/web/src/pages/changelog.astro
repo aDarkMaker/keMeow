@@ -1,0 +1,81 @@
+---
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const fallback = "# 更新日志\n\n暂无发布。";
+
+async function loadChangelog(): Promise<string> {
+  const candidates = [
+    resolve(process.cwd(), "../../CHANGELOG.md"),
+    resolve(process.cwd(), "CHANGELOG.md"),
+    resolve(process.cwd(), "../CHANGELOG.md"),
+  ];
+  for (const path of candidates) {
+    try {
+      return await readFile(path, "utf8");
+    } catch {
+      /* try next */
+    }
+  }
+  return fallback;
+}
+
+function renderChangelog(md: string): string {
+  const lines = md.trim().split("\n");
+  const out: string[] = [];
+  let inList = false;
+
+  const closeList = (): void => {
+    if (!inList) return;
+    out.push("</ul>");
+    inList = false;
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (line.startsWith("## ")) {
+      closeList();
+      out.push(`<h2>${escapeHtml(line.slice(3))}</h2>`);
+      continue;
+    }
+    if (line.startsWith("# ")) {
+      closeList();
+      out.push(`<h1>${escapeHtml(line.slice(2))}</h1>`);
+      continue;
+    }
+    if (line.startsWith("- ")) {
+      if (!inList) {
+        out.push("<ul>");
+        inList = true;
+      }
+      out.push(`<li>${escapeHtml(line.slice(2))}</li>`);
+      continue;
+    }
+    closeList();
+    if (line.length === 0) continue;
+    out.push(`<p>${escapeHtml(line)}</p>`);
+  }
+  closeList();
+  return out.join("\n");
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+const html = renderChangelog(await loadChangelog());
+---
+
+<BaseLayout title="keMeow changelog" description="Release history for keMeow.">
+  <article class="prose" set:html={html} />
+
+  <footer class="site-footer">
+    <p>来自 CHANGELOG.md · v{import.meta.env.PUBLIC_APP_VERSION ?? "0.1.0"}</p>
+  </footer>
+</BaseLayout>

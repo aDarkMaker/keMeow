@@ -1,0 +1,50 @@
+{
+  "name": "kemeow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.1",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "prepare": "husky || true",
+    "dev": "pnpm --filter @kemeow/web dev",
+    "build": "pnpm --filter @kemeow/web build",
+    "preview": "pnpm --filter @kemeow/web preview",
+    "check": "pnpm --filter @kemeow/web check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "spell": "cspell --no-progress --no-summary",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.3",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.3",
+    "cspell": "10.3.5",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-astro": "3.2.1",
+    "globals": "17.12.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.4",
+    "prettier": "3.9.9",
+    "prettier-plugin-astro": "1.1.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.2"
+  },
+  "lint-staged": {
+    "*.{ts,mts,astro}": ["eslint --fix", "prettier --write"],
+    "*.{js,mjs,cjs,json,md,css,yml,yaml}": ["prettier --write"]
+  }
+}

@@ -1,0 +1,11 @@
+<!--
+  Recommended git identity defaults for contributors.
+
+  Commit messages follow Conventional Commits, English only:
+
+    <type>(<scope>): <subject>
+
+  Allowed types: feat fix perf refactor docs test build ci chore revert
+  Required scopes: web api game-core ui repo
+  Example: feat(game-core): add circle collision solver
+-->
